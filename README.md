@@ -2,10 +2,10 @@
 Team 2 Spotify Tracks Data Project
 
 ## Team Members
-Jadon Camacho
-Matthew Gouyer
-Tien Pham
-Tiernan Johnson
+Jadon Camacho,
+Matthew Gouyer,
+Tien Pham,
+Tiernan Johnson,
 Matthew Wong
 
 ## Dataset
