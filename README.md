@@ -9,4 +9,4 @@ Tiernan Johnson,
 Matthew Wong
 
 ## Dataset
-Comprehensive information about Spotify tracks involving a diverse collection of 125 genres.
+Our dataset contains a collection of Spotify tracks of 125 different genres. This dataset contains 114,000 rows each representing a music track and 21 columns describing different attributes of that track. Each track contains audio features like popularity, duration, danceability, and more. The dataset contains various datatypes such as floats, integers, strings, and objects. This dataset provides users with insight into the top songs in the music industry.
