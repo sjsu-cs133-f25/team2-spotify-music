@@ -57,6 +57,12 @@ genre_summary = songs_pvf.groupby('track_genre')[audio_features].mean().reset_in
 #######################  Graphs #########################
 FEATURE_BAR_HEIGHT = 2000
 
+def filter_by_genres(df, genres_selected):
+    """Return df filtered by selected genres (list); if empty/None, return original."""
+    if genres_selected:
+        return df[df['track_genre'].isin(genres_selected)]
+    return df
+
 def build_feature_bar(data, feature):
     df = data.copy()
     melted = pd.melt(
@@ -227,8 +233,19 @@ app.layout = html.Div([
             options=[{'label': f.capitalize(), 'value': f} for f in audio_features],
             value=audio_features[0],
             clearable=False,
+            className='dropdown',
             placeholder="Pick an audio feature"
         ),
+        html.Label("Filter Genres (multi):", className='dropdown-labels'),
+        dcc.Dropdown(
+            id='genre-filter',
+            options=[{'label': g, 'value': g} for g in sorted(genres)],
+            value=[],
+            multi=True,
+            className='dropdown',
+            placeholder="Select one or more genres"
+        ),
+        html.Button('Apply Genre Filter', id='apply-genre-filter', n_clicks=0),
         html.Img(src='/assets/spotify_charts.png', id='spotify-img'),
         html.H3("Feature Descriptions"),
         html.P([html.B("Danceability:"), " Describes how suitable a track is for dancing. Higher values suggest more energy and rhythm. (0.0 to 1.0)"]),
@@ -250,8 +267,10 @@ app.layout = html.Div([
             ]),
             dcc.Tab(label="Scatter Plot", children=[
                 html.Div([
+                    html.Label("Adjust Point Opacity:", className='dropdown-labels'),
                     dcc.Slider(
                         id='scatter-opacity',
+                        className='n-slider',
                         min=0.1, max=1.0, step=0.1, value=0.5,
                         marks={round(x,1): str(round(x,1)) for x in np.linspace(0.1,1.0,10)}
                     ),
@@ -260,8 +279,10 @@ app.layout = html.Div([
             ]),
             dcc.Tab(label="Line Chart", children=[
                 html.Div([
+                    html.Label("Adjust Line Opacity:", className='dropdown-labels'),
                     dcc.Slider(
                         id='line-opacity',
+                        className='n-slider',
                         min=0.1, max=1.0, step=0.1, value=0.6,
                         marks={round(x,1): str(round(x,1)) for x in np.linspace(0.1,1.0,10)}
                     ),
@@ -270,6 +291,7 @@ app.layout = html.Div([
             ]),
             dcc.Tab(label="Distribution View", children=[
                 html.Div([
+                    html.Label("Select Box Orientation:", className='dropdown-labels'),
                     dcc.RadioItems(
                         id='dist-orientation',
                         options=[{'label': 'Vertical', 'value': 'v'},
@@ -277,11 +299,13 @@ app.layout = html.Div([
                         value='v',
                         inline=True
                     ),
+                    html.Label("Filter Popularity Buckets:", className='dropdown-labels'),
                     dcc.Dropdown(
                         id='dist-pop',
                         options=[{'label': p, 'value': p} for p in popularity_labels],
                         value=[],
                         multi=True,
+                        className='dropdown',
                         placeholder="Filter popularity buckets (optional)"
                     ),
                     dcc.Graph(id='dist-fig')
@@ -298,11 +322,13 @@ app.layout = html.Div([
             ]),
             dcc.Tab(label="Tabularized Data", children=[
                 html.Div([
+                    html.Label("Filter Popularity Buckets:", className='dropdown-labels'),
                     dcc.Dropdown(
                         id='table-pop-bucket',
                         options=[{'label': p, 'value': p} for p in popularity_labels],
                         value=None,
-                        placeholder="Select popularity bucket"
+                        placeholder="Select popularity bucket",
+                        className='dropdown'
                     ),
                     dcc.Graph(id='table-fig')
                 ])
@@ -322,27 +348,38 @@ def update_feature_bar(feature):
 @app.callback(
     Output('scatter-fig', 'figure'),
     [Input('global-feature', 'value'),
-     Input('scatter-opacity', 'value')]
+     Input('scatter-opacity', 'value'),
+     Input('apply-genre-filter', 'n_clicks'),
+     State('genre-filter', 'value')]
 )
-def update_scatter(x_axis, opacity):
-    return build_scatter(songs_pvf, x_axis, opacity)
+def update_scatter(x_axis, opacity, apply_clicks, genres_selected):
+    dff = filter_by_genres(songs_pvf, genres_selected)
+    if dff.empty:
+        return go.Figure(layout_title_text="No data for selected genres")
+    return build_scatter(dff, x_axis, opacity)
 
 @app.callback(
     Output('line-fig', 'figure'),
     [Input('global-feature', 'value'),
-     Input('line-opacity', 'value')]
+     Input('line-opacity', 'value'),
+    Input('apply-genre-filter', 'n_clicks'),
+     State('genre-filter', 'value')]
 )
-def update_line(x_axis, opacity):
-    return build_line(songs_pvf, x_axis, opacity)
+def update_line(x_axis, opacity, apply_clicks, genres_selected):
+    dff = filter_by_genres(songs_pvf, genres_selected)
+    return build_line(dff, x_axis, opacity)
 
 @app.callback(
     Output('dist-fig', 'figure'),
     [Input('global-feature', 'value'),
      Input('dist-pop', 'value'),
-     Input('dist-orientation', 'value')]
+     Input('dist-orientation', 'value'),
+    Input('apply-genre-filter', 'n_clicks'),
+     State('genre-filter', 'value')]
 )
-def update_distribution(feature, selected_pop, orientation):
-    return build_box(songs_pvf, feature, selected_pop, orientation)
+def update_distribution(feature, selected_pop, orientation, apply_clicks, genres_selected):
+    dff = filter_by_genres(songs_pvf, genres_selected)
+    return build_box(dff, feature, selected_pop, orientation)
 
 @app.callback(
     Output('facet-fig', 'figure'),
