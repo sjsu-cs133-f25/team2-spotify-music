@@ -1,5 +1,5 @@
 body {
-  background-color:#c4bfb1;
+  background-color:#191414;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
@@ -15,6 +15,10 @@ h1 {
   font-size: 40px;
   color: white;
   text-align: center;
+}
+h3 {
+  margin-left: 20px;
+  color: white;
 }
 p {
   margin-left: 20px;
@@ -32,18 +36,23 @@ p {
 }
 /********************* SECTIONS *********************/
 #container {
-  width: 100%; 
-  overflow: hidden;
+  display: flex; 
+  align-items: stretch; 
+  gap: 12px;
 }
 #left-container {
-  height: 937px;
-  width: 320px;
-  background-color:#3BA27A;  
-  float: left;
-  margin: 0;
+  background-color:#1DB954;
+  width: 25%;
+  min-width: 300px;
+  padding: 12px;
+  min-height: 100vh;
+  height: auto;
 }
 #right-container {
-  margin-left: 340px;
+  flex: 1; 
+  padding: 12px; 
+  box-sizing: border-box; 
+  min-width: 400px;
 }
 #visualisation {
   margin-top: 30px;
@@ -147,4 +156,11 @@ p {
 }
 #n-slider .rc-slider-dot-active {  
   border-color: #E6E6E6;
+}
+
+/********************* IMAGES *********************/
+#spotify-img {
+  display: block; 
+  margin: 20px auto; 
+  width: 80%;
 }

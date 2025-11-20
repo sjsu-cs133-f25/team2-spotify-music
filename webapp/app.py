@@ -221,6 +221,7 @@ app.layout = html.Div([
     html.Div([
         html.H1("Spotify Audio Features & Popularity Analysis", style={'textAlign': 'center'}),
         html.P("Interactive exploration of audio features, popularity buckets, and genres.", style={'textAlign': 'center'}),
+        html.Label("Select Audio Feature:", className='dropdown-labels'),
         dcc.Dropdown(
             id='global-feature',
             options=[{'label': f.capitalize(), 'value': f} for f in audio_features],
@@ -228,7 +229,18 @@ app.layout = html.Div([
             clearable=False,
             placeholder="Pick an audio feature"
         ),
-    ], style={'width': '25%', 'minWidth': '300px', 'padding': '12px', 'boxSizing': 'border-box'}),
+        html.Img(src='/assets/spotify_charts.png', id='spotify-img'),
+        html.H3("Feature Descriptions"),
+        html.P([html.B("Danceability:"), " Describes how suitable a track is for dancing. Higher values suggest more energy and rhythm. (0.0 to 1.0)"]),
+        html.P([html.B("Energy:"), " A measure of intensity and activity. High values suggest energetic tracks that are fast, loud, and noisy. (0.0 to 1.0)"]),
+        html.P([html.B("Loudness:"), " The overall loudness of a track in decibels (dB). Positive values represent louder songs while negative values suggest quieter ones."]),
+        html.P([html.B("Speechiness:"), " Represents the presence of spoken words in a track. Higher values means more words. (0.0 to 1.0)"]),
+        html.P([html.B("Acousticness:"), " A confidence measure of whether the track is acoustic. Higher values indicate more acoustic sounds. (0.0 to 1.0)"]),
+        html.P([html.B("Instrumentalness:"), " A score that represents the likelyhood that a song is an instrumental. (0.0 to 1.0)"]),
+        html.P([html.B("Liveness:"), " A score that detects the presence of an audience in the recording. (0.0 to 1.0)"]),
+        html.P([html.B("Valence:"), " A measure of musical positiveness conveyed by a track. Higher values indicate more positive emotions. (0.0 to 1.0)"]),
+        html.P([html.B("Tempo:"), " The speed or pace of a given piece, measured in beats per minute (BPM)."]),
+    ], id='left-container'),
     html.Div([
         dcc.Tabs([
             dcc.Tab(label="Overview + Details", children=[
@@ -296,8 +308,8 @@ app.layout = html.Div([
                 ])
             ])
         ])
-    ], style={'flex': '1', 'padding': '12px', 'boxSizing': 'border-box', 'minWidth': '400px'})
-], style={'display': 'flex', 'alignItems': 'flex-start', 'gap': '12px'})
+    ], id='right-container')
+], id='container')
 
 ################### Callback ##############################
 @app.callback(
