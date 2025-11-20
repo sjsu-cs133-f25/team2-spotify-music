@@ -4,15 +4,12 @@ body {
   margin: 0;
   padding: 0;
 }
-img {
-  width: 320px;
-  margin-bottom: 30px;
-}
+
 /********************* TEXT *********************/
 h1 {
   margin-top: 50px;
   text-transform: uppercase;
-  font-size: 40px;
+  font-size: 30px;
   color: white;
   text-align: center;
 }
@@ -34,6 +31,7 @@ p {
   color: #323770;
   font-weight: bold;
 }
+
 /********************* SECTIONS *********************/
 #container {
   display: flex; 
@@ -41,7 +39,7 @@ p {
   gap: 12px;
 }
 #left-container {
-  background-color:#1DB954;
+  background-color:#1ed760;
   width: 25%;
   min-width: 300px;
   padding: 12px;
@@ -54,45 +52,7 @@ p {
   box-sizing: border-box; 
   min-width: 400px;
 }
-#visualisation {
-  margin-top: 30px;
-  width: 100%; 
-  overflow: hidden;
-  height: 430px;
-}
-#histogram {
-  width: 700px; 
-  height: 430px;
-  margin-left: 35px;
-  float: left; 
-}
-#barplot {
-  width: 700px; 
-  height: 430px;
-  margin-left: 800px;
-  margin-right: 20px;
-}
-#data-extract {
-  margin-top: 30px;
-  width: 100%; 
-  overflow: hidden;
-  height: 400px;
-}
-#table {
-  height: 420px;
-  width: 800px; 
-  float: left;
-  margin-left: 35px;
-  margin-top: 15px;
-}
-#table-side {
-  width: 400px;
-  margin-left: 900px;
-  margin-top: 60px;
-  background-color: white;
-  border-radius: 10px;
-  padding: 20px;
-}
+
 /********************* BUTTONS *********************/
 #apply-genre-filter {
   width: 240px;
@@ -113,6 +73,7 @@ p {
   background-color: #6284bd;
   color: white;
 }
+
 /********************* DROPDOWNS *********************/
 .dropdown {
   margin-left: 20px;
@@ -126,36 +87,45 @@ p {
   background-color: white;
 }
 .dropdown .Select-value{
-  background-color: #3BA27A;
+  background-color: #773795cc;
   color: white;
   font-size: 14px;  
 }
 .dropdown .VirtualizedSelectFocusedOption {
-  background-color: #a5ecd1;
+  background-color: #d7c3df;
   color: black;
 }
 .dropdown .VirtualizedSelectOption  {
   font-size: 14px;
 }
-/********************* TOGGLES *********************/
-.toggle {
-        margin-top: 8px;
-}
-           
-
+  
 /********************* SLIDER *********************/
-#n-slider {
+#line-opacity {
   margin-top: 8px;
 }
-#n-slider .rc-slider-handle  {
-  background-color: #FFBD59;
+#line-opacity .rc-slider-handle  {
+  background-color: #1ed760;
   border: 0px;
 }
-#n-slider .rc-slider-track {
-  background-color: #E6E6E6;
+#line-opacity .rc-slider-track {
+  background-color: #1ed75fc5;
 }
-#n-slider .rc-slider-dot-active {  
-  border-color: #E6E6E6;
+#line-opacity .rc-slider-dot-active {  
+  border-color: #1ed75fc5;
+}
+
+#scatter-opacity {
+  margin-top: 8px;
+}
+#scatter-opacity .rc-slider-handle  {
+  background-color: #1ed760;
+  border: 0px;
+}
+#scatter-opacity .rc-slider-track {
+  background-color: #1ed75fc5;
+}
+#scatter-opacity .rc-slider-dot-active {  
+  border-color: #1ed75fc5;
 }
 
 /********************* IMAGES *********************/
@@ -169,4 +139,14 @@ p {
 #dist-orientation {
   color: #ffffff;
   margin-left: 20px;
+}
+
+/********************* TABS *********************/
+.tab {
+  background-color: #282828;
+  color: #1ed760;
+}
+.tab .tab--selected {
+  color: black;
+  background-color: #1ed760;
 }

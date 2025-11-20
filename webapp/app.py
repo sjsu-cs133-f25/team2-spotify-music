@@ -1,9 +1,7 @@
 import dash
 import kagglehub
-import seaborn as sns
 import numpy as np
 import pandas as pd
-import math
 from kagglehub import KaggleDatasetAdapter
 
 import plotly.graph_objects as go
@@ -12,8 +10,6 @@ import plotly.io as pio
 
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
-import pkgutil
-import importlib.util
 
 pio.templates.default = "plotly"
 
@@ -84,7 +80,8 @@ def build_feature_bar(data, feature):
         orientation='h',
         title=f'Average {feature.capitalize()} per Genre',
         color='Audio Feature',
-        template='plotly'
+        template='plotly',
+        color_discrete_sequence=['#1ed760']
     )
     fig.update_layout(
         bargap=0.25,
@@ -94,7 +91,8 @@ def build_feature_bar(data, feature):
         yaxis_title='Genre',
         showlegend=False,
         height=FEATURE_BAR_HEIGHT,
-        autosize=True
+        autosize=True,
+        plot_bgcolor='rgb(215, 195, 223)'
     )
     fig.update_yaxes(categoryorder='array', categoryarray=filtered['track_genre'].tolist(),
                      tickfont=dict(size=11), automargin=False)
@@ -113,6 +111,7 @@ def build_scatter(df, x_axis, opacity):
         labels={x_axis: x_axis.capitalize(), 'popularity': 'Popularity'},
         template="plotly"
     )
+    fig.update_layout(legend_title_text='Popularity Bucket', plot_bgcolor='rgb(215, 195, 223)')
     return fig
 
 def build_line(df, x_axis, opacity):
@@ -136,7 +135,7 @@ def build_line(df, x_axis, opacity):
         template="plotly"  
     )
     fig.update_traces(opacity=opacity)
-    fig.update_layout(legend_title_text='Popularity Bucket')
+    fig.update_layout(legend_title_text='Popularity Bucket', plot_bgcolor='rgb(215, 195, 223)')
     return fig
 
 def build_box(df, feature, selected_pop, orientation):
@@ -166,12 +165,12 @@ def build_box(df, feature, selected_pop, orientation):
         },
         template="plotly"
     )
-    fig.update_layout(boxmode='group')
+    fig.update_layout(boxmode='group', plot_bgcolor='rgb(215, 195, 223)')
     return fig
 
 MAX_FACETS = 25
 FACET_BASE_HEIGHT = 1000
-FACET_WRAP_FIXED = 6   
+FACET_WRAP_FIXED = 5  
 def build_facet(df, x_axis):
     dff = df.copy()
     gs = sorted(dff['track_genre'].dropna().unique().tolist())
@@ -202,7 +201,10 @@ def build_facet(df, x_axis):
         height=FACET_BASE_HEIGHT
     )
     fig.for_each_annotation(lambda a: a.update(text=a.text.split('=')[-1]))
-    fig.update_layout(margin=dict(l=40, r=10, t=60, b=40), autosize=True, uirevision="facet-static")
+    fig.update_layout(margin=dict(l=40, r=10, t=60, b=40), 
+                      autosize=True, uirevision="facet-static", 
+                      plot_bgcolor='rgb(215, 195, 223)',
+                      legend_title_text='Popularity Bucket')
     return fig
 
 def build_table(df, selected_bucket):
@@ -213,10 +215,10 @@ def build_table(df, selected_bucket):
     head_df = dff.head(25)
     table = go.Figure(data=[go.Table(
         header=dict(values=[c.capitalize() for c in columns],
-                    fill_color='#23385c', font=dict(color='white', size=12),
+                    fill_color="#000000", font=dict(color='white', size=12),
                     align='left'),
         cells=dict(values=[head_df[c] for c in columns],
-                   fill_color=['#FFF2CC'], align='left'))
+                   fill_color=['#1ed760'], align='left'))
     ])
     table.update_layout(title=f'Sample Records (n={len(head_df)})')
     return table
@@ -226,7 +228,7 @@ app = Dash(__name__)
 app.layout = html.Div([
     html.Div([
         html.H1("Spotify Audio Features & Popularity Analysis", style={'textAlign': 'center'}),
-        html.P("Interactive exploration of audio features, popularity buckets, and genres.", style={'textAlign': 'center'}),
+        html.P("Interactive exploration of audio features for Spotify tracks with respect to popularity and genres.", style={'textAlign': 'center'}),
         html.Label("Select Audio Feature:", className='dropdown-labels'),
         dcc.Dropdown(
             id='global-feature',
@@ -260,36 +262,34 @@ app.layout = html.Div([
     ], id='left-container'),
     html.Div([
         dcc.Tabs([
-            dcc.Tab(label="Overview + Details", children=[
+            dcc.Tab(label="Average Feature Values for Each Genre", children=[
                 html.Div([
                     dcc.Graph(id='feature-bar', style={'height': f'{FEATURE_BAR_HEIGHT}px', 'width': '100%'}, config={'responsive': True}),
                 ])
             ]),
-            dcc.Tab(label="Scatter Plot", children=[
+            dcc.Tab(label="Audio Feature vs Popularity", children=[
                 html.Div([
                     html.Label("Adjust Point Opacity:", className='dropdown-labels'),
                     dcc.Slider(
                         id='scatter-opacity',
-                        className='n-slider',
                         min=0.1, max=1.0, step=0.1, value=0.5,
                         marks={round(x,1): str(round(x,1)) for x in np.linspace(0.1,1.0,10)}
                     ),
                     dcc.Graph(id='scatter-fig')
                 ])
             ]),
-            dcc.Tab(label="Line Chart", children=[
+            dcc.Tab(label="Audio Feature vs Mean Popularity", children=[
                 html.Div([
                     html.Label("Adjust Line Opacity:", className='dropdown-labels'),
                     dcc.Slider(
                         id='line-opacity',
-                        className='n-slider',
                         min=0.1, max=1.0, step=0.1, value=0.6,
                         marks={round(x,1): str(round(x,1)) for x in np.linspace(0.1,1.0,10)}
                     ),
                     dcc.Graph(id='line-fig')
                 ])
             ]),
-            dcc.Tab(label="Distribution View", children=[
+            dcc.Tab(label="Audio Feature Distributions", children=[
                 html.Div([
                     html.Label("Select Box Orientation:", className='dropdown-labels'),
                     dcc.RadioItems(
@@ -313,6 +313,15 @@ app.layout = html.Div([
             ]),
             dcc.Tab(label="Multi-Facet View", children=[
                 html.Div([
+                    html.Label("Select Genres for Facet (multi):", className='dropdown-labels'),
+                    dcc.Dropdown(
+                        id='facet-genre-filter',
+                        options=[{'label': g, 'value': g} for g in sorted(genres)],
+                        value=[],
+                        multi=True,
+                        className='dropdown',
+                        placeholder="Choose genres to include (blank = all)"
+                    ),
                     dcc.Graph(
                         id='facet-fig',
                         style={'height': f'{FACET_BASE_HEIGHT}px', 'width': '100%', 'flex': '1'},
@@ -383,10 +392,17 @@ def update_distribution(feature, selected_pop, orientation, apply_clicks, genres
 
 @app.callback(
     Output('facet-fig', 'figure'),
-    Input('global-feature', 'value')
+    [Input('global-feature', 'value'),
+     Input('facet-genre-filter', 'value')]
 )
-def update_facet(x_axis):
-    return build_facet(songs_pvf, x_axis)
+def update_facet(x_axis, facet_genres):
+    # If user selected specific genres, filter; else use all
+    dff = songs_pvf
+    if facet_genres:
+        dff = dff[dff['track_genre'].isin(facet_genres)]
+    if dff.empty:
+        return go.Figure(layout=dict(title="No data for selected facet genres", height=FACET_BASE_HEIGHT))
+    return build_facet(dff, x_axis)
 
 @app.callback(
     Output('table-fig', 'figure'),
