@@ -1,0 +1,152 @@
+body {
+  background-color:#191414;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/********************* TEXT *********************/
+h1 {
+  margin-top: 50px;
+  text-transform: uppercase;
+  font-size: 30px;
+  color: white;
+  text-align: center;
+}
+h3 {
+  margin-left: 20px;
+  color: white;
+}
+p {
+  margin-left: 20px;
+  color: white;
+}
+.dropdown-labels {
+  margin-left: 20px;
+  color: white;
+  font-weight: bold;
+}
+.other-labels {
+  margin-left: 20px;
+  color: #323770;
+  font-weight: bold;
+}
+
+/********************* SECTIONS *********************/
+#container {
+  display: flex; 
+  align-items: stretch; 
+  gap: 12px;
+}
+#left-container {
+  background-color:#1ed760;
+  width: 25%;
+  min-width: 300px;
+  padding: 12px;
+  min-height: 100vh;
+  height: auto;
+}
+#right-container {
+  flex: 1; 
+  padding: 12px; 
+  box-sizing: border-box; 
+  min-width: 400px;
+}
+
+/********************* BUTTONS *********************/
+#apply-genre-filter {
+  width: 240px;
+  height: 40px;
+  border-radius: 5px;
+  margin-left: 38px;
+  margin-top: 10px;
+  border: 0px;
+  cursor: pointer;
+  background-color: black;
+  color: white;
+  font-weight: bold;
+  font-family: inherit;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+#apply-genre-filter:hover {
+  background-color: #6284bd;
+  color: white;
+}
+
+/********************* DROPDOWNS *********************/
+.dropdown {
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 5px;
+}
+.dropdown .Select-control{
+  background-color: white;
+}
+.dropdown .Select-menu-outer{
+  background-color: white;
+}
+.dropdown .Select-value{
+  background-color: #773795cc;
+  color: white;
+  font-size: 14px;  
+}
+.dropdown .VirtualizedSelectFocusedOption {
+  background-color: #d7c3df;
+  color: black;
+}
+.dropdown .VirtualizedSelectOption  {
+  font-size: 14px;
+}
+  
+/********************* SLIDER *********************/
+#line-opacity {
+  margin-top: 8px;
+}
+#line-opacity .rc-slider-handle  {
+  background-color: #1ed760;
+  border: 0px;
+}
+#line-opacity .rc-slider-track {
+  background-color: #1ed75fc5;
+}
+#line-opacity .rc-slider-dot-active {  
+  border-color: #1ed75fc5;
+}
+
+#scatter-opacity {
+  margin-top: 8px;
+}
+#scatter-opacity .rc-slider-handle  {
+  background-color: #1ed760;
+  border: 0px;
+}
+#scatter-opacity .rc-slider-track {
+  background-color: #1ed75fc5;
+}
+#scatter-opacity .rc-slider-dot-active {  
+  border-color: #1ed75fc5;
+}
+
+/********************* IMAGES *********************/
+#spotify-img {
+  display: block; 
+  margin: 20px auto; 
+  width: 80%;
+}
+
+/********************* RADIO BUTTONS *********************/
+#dist-orientation {
+  color: #ffffff;
+  margin-left: 20px;
+}
+
+/********************* TABS *********************/
+.tab {
+  background-color: #282828;
+  color: #1ed760;
+}
+.tab .tab--selected {
+  color: black;
+  background-color: #1ed760;
+}
