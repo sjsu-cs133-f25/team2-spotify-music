@@ -7,6 +7,8 @@ from kagglehub import KaggleDatasetAdapter
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.io as pio 
+from plotly.subplots import make_subplots
+import math
 
 from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
@@ -15,15 +17,17 @@ pio.templates.default = "plotly"
 
 ################### DATA PREPARATION ###################
 # Download the latest dataset from kaggle
-downloaded_path = kagglehub.dataset_download("thedevastator/spotify-tracks-genre-dataset")
+# downloaded_path = kagglehub.dataset_download("thedevastator/spotify-tracks-genre-dataset")
 
 # Load the dataset using dataset_load
-songs = kagglehub.dataset_load(
-  KaggleDatasetAdapter.PANDAS,
-  "thedevastator/spotify-tracks-genre-dataset",
-  "train.csv",
-)
-songs.dropna()
+#songs = kagglehub.dataset_load(
+#  KaggleDatasetAdapter.PANDAS,
+#  "thedevastator/spotify-tracks-genre-dataset",
+#  "train.csv",
+#)
+
+# For local testing, load from local CSV
+songs = pd.read_csv('webapp/data/train.csv')
 
 # outline of audio features and genres
 audio_features = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']
@@ -31,7 +35,7 @@ genres = songs['track_genre'].unique().tolist()
 
 
 # Pair audio features and popularity column and genres
-pop_v_features = audio_features + ['popularity'] + ['track_genre']
+pop_v_features = audio_features + ['popularity', 'duration_ms'] + ['track_genre']
 songs_pvf = songs[pop_v_features]
 
 # handle missing values w/ a simple dropna statement
@@ -138,6 +142,51 @@ def build_line(df, x_axis, opacity):
     fig.update_layout(legend_title_text='Popularity Bucket', plot_bgcolor='rgb(215, 195, 223)')
     return fig
 
+def build_duration_line(df, opacity, bin_seconds=30, min_count=5):
+    dff = df.copy()
+    dff = dff[dff['duration_ms'].notna() & dff['popularity'].notna()]
+    # convert to seconds
+    dff['duration_sec'] = dff['duration_ms'] / 1000.0
+
+    # create bins (0 .. max_duration) with width bin_seconds
+    max_sec = max(1, int(dff['duration_sec'].max()))
+    bins = np.arange(0, max_sec + bin_seconds, bin_seconds)
+    # label bins by their midpoint (in seconds)
+    bin_labels = [(bins[i] + bins[i+1]) / 2.0 for i in range(len(bins)-1)]
+    dff['duration_bin'] = pd.cut(dff['duration_sec'], bins=bins, labels=bin_labels, include_lowest=True)
+    agg = (dff.groupby('duration_bin', as_index=False)
+           .agg(mean_popularity=('popularity', 'mean'), count=('popularity', 'size')))
+
+    # drop empty bins and low-count bins
+    agg = agg[agg['duration_bin'].notna()]
+    if agg.empty:
+        return go.Figure(layout_title_text="No binned duration data")
+    agg['duration_bin'] = agg['duration_bin'].astype(float)
+    agg = agg[agg['count'] >= min_count]
+    if agg.empty:
+        # if filtering by min_count removed everything, relax and show all bins
+        agg = (dff.groupby('duration_bin', as_index=False)
+               .agg(mean_popularity=('popularity', 'mean'), count=('popularity', 'size')))
+        agg = agg[agg['duration_bin'].notna()]
+        agg['duration_bin'] = agg['duration_bin'].astype(float)
+    # convert seconds to minutes
+    agg['duration_min'] = agg['duration_bin'] / 60.0
+
+    fig = px.line(
+        agg.sort_values('duration_min'),
+        x='duration_min',
+        y='mean_popularity',
+        markers=True,
+        title='Mean Popularity vs Track Duration (minutes)',
+        labels={'duration_min': 'Duration (minutes)', 'mean_popularity': 'Mean Popularity'},
+        template='plotly',
+    )
+    fig.update_traces(hovertemplate='Duration: %{x:.2f} min<br>Mean Popularity: %{y:.2f}<br>Count: %{customdata[0]}',
+                      customdata=agg[['count']].values)
+    fig.update_traces(opacity=opacity, line_color='rgb(29, 185, 84)')
+    fig.update_layout(plot_bgcolor='rgb(215, 195, 223)')
+    return fig
+
 def build_box(df, feature, selected_pop, orientation):
     dff = df.copy()
     if selected_pop:
@@ -178,33 +227,73 @@ def build_facet(df, x_axis):
     if len(gs) > MAX_FACETS:
         gs = gs[:MAX_FACETS]; capped = True
     dff = dff[dff['track_genre'].isin(gs)]
-    agg = (dff.groupby(['track_genre', x_axis, 'popularity_bucket'], as_index=False)['popularity']
-             .mean()
-             .rename(columns={'popularity': 'mean_popularity'}))
-    if agg.empty:
-        return go.Figure(layout=dict(title="No data after filters", height=FACET_BASE_HEIGHT, autosize=False))
-    agg['popularity_bucket'] = agg['popularity_bucket'].astype(str)
-    wrap_eff = max(1, min(FACET_WRAP_FIXED, len(gs)))
 
-    fig = px.line(
-        agg,
-        x=x_axis,
-        y='mean_popularity',
-        color='popularity_bucket',
-        facet_col='track_genre',
-        facet_col_wrap=wrap_eff,
-        category_orders={'track_genre': gs},
-        markers=True,
-        title=f'{x_axis.capitalize()} vs Mean Popularity by Genre' + (f' (first {MAX_FACETS})' if capped else ''),
-        labels={x_axis: x_axis.capitalize(), 'mean_popularity': 'Mean Popularity', 'track_genre': 'Genre'},
-        template="plotly",
-        height=FACET_BASE_HEIGHT
+    # Shared bins across all genres
+    dff = dff[dff['duration_ms'].notna() & dff['popularity'].notna()]
+    max_sec = max(1, int(dff['duration_ms'].max() / 1000.0))
+    bin_seconds = 30
+    bins = np.arange(0, max_sec + bin_seconds, bin_seconds)
+    # Label bins by their midpoint (in seconds)
+    bin_labels = [(bins[i] + bins[i+1]) / 2.0 for i in range(len(bins)-1)]
+
+    ncols = max(1, min(FACET_WRAP_FIXED, len(gs)))
+    nrows = math.ceil(len(gs) / ncols)
+    fig = make_subplots(rows=nrows, cols=ncols, subplot_titles=gs,
+                        shared_yaxes=True, horizontal_spacing=0.03, vertical_spacing=0.12)
+
+    for i, genre in enumerate(gs):
+        row = (i // ncols) + 1
+        col = (i % ncols) + 1
+        gdf = dff[dff['track_genre'] == genre].copy()
+        if gdf.empty:
+            continue
+        gdf['duration_sec'] = gdf['duration_ms'] / 1000.0
+        gdf['duration_bin'] = pd.cut(gdf['duration_sec'], bins=bins, labels=bin_labels, include_lowest=True)
+
+        agg = (gdf.groupby('duration_bin', as_index=False)
+               .agg(mean_popularity=('popularity', 'mean'), count=('popularity', 'size')))
+        agg = agg[agg['duration_bin'].notna()]
+        if agg.empty:
+            continue
+        agg['duration_bin'] = agg['duration_bin'].astype(float)
+        agg['duration_min'] = agg['duration_bin'] / 60.0
+
+        # Filter bins with very low counts to reduce noise
+        min_count = 2
+        disp = agg[agg['count'] >= min_count]
+        if disp.empty:
+            disp = agg
+
+        # Marker sizes based on counts
+        max_count = disp['count'].max()
+        sizes = disp['count'] / max_count * 15 + 5  # scale to [5,20]
+
+        fig.add_trace(
+            go.Scatter(
+                x=disp['duration_min'],
+                y=disp['mean_popularity'],
+                mode='lines+markers',
+                marker=dict(size=sizes, color='rgb(30, 214, 90)', opacity=0.4,),
+                line=dict(width=1.5, color='rgb(29, 185, 84)'),
+                hovertemplate='Duration: %{x:.2f} min<br>Mean Popularity: %{y:.2f}<br>Count: %{customdata[0]}',
+                customdata=disp[['count']].values,
+                showlegend=False
+            ),
+            row=row, col=col
+        )
+
+        xaxis_name = f'xaxis{(row-1)*ncols + col}' if not (row == 1 and col == 1) else 'xaxis'
+        fig.layout[xaxis_name].update(title='Duration (min)')
+        yaxis_name = f'yaxis{(row-1)*ncols + col}' if not (row == 1 and col == 1) else 'yaxis'
+        fig.layout[yaxis_name].update(title='Mean Popularity')
+
+    fig.update_layout(
+        height=max(FACET_BASE_HEIGHT, 300 * nrows),
+        title_text=(f'Duration vs Mean Popularity by Genre' + (f' (first {MAX_FACETS})' if capped else '')),
+        margin=dict(l=40, r=10, t=80, b=40),
+        plot_bgcolor='rgb(215, 195, 223)'
     )
-    fig.for_each_annotation(lambda a: a.update(text=a.text.split('=')[-1]))
-    fig.update_layout(margin=dict(l=40, r=10, t=60, b=40), 
-                      autosize=True, uirevision="facet-static", 
-                      plot_bgcolor='rgb(215, 195, 223)',
-                      legend_title_text='Popularity Bucket')
+
     return fig
 
 def build_table(df, selected_bucket):
@@ -278,7 +367,7 @@ app.layout = html.Div([
                     dcc.Graph(id='scatter-fig')
                 ])
             ]),
-            dcc.Tab(label="Audio Feature vs Mean Popularity", children=[
+            dcc.Tab(label="Duration vs Mean Popularity", children=[
                 html.Div([
                     html.Label("Adjust Line Opacity:", className='dropdown-labels'),
                     dcc.Slider(
@@ -369,14 +458,13 @@ def update_scatter(x_axis, opacity, apply_clicks, genres_selected):
 
 @app.callback(
     Output('line-fig', 'figure'),
-    [Input('global-feature', 'value'),
-     Input('line-opacity', 'value'),
-    Input('apply-genre-filter', 'n_clicks'),
+    [Input('line-opacity', 'value'),
+     Input('apply-genre-filter', 'n_clicks'),
      State('genre-filter', 'value')]
 )
-def update_line(x_axis, opacity, apply_clicks, genres_selected):
+def update_line(opacity, apply_clicks, genres_selected):
     dff = filter_by_genres(songs_pvf, genres_selected)
-    return build_line(dff, x_axis, opacity)
+    return build_duration_line(dff, opacity)
 
 @app.callback(
     Output('dist-fig', 'figure'),
