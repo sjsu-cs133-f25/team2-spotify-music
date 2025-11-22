@@ -179,11 +179,11 @@ def build_duration_line(df, opacity, bin_seconds=30, min_count=5):
         markers=True,
         title='Mean Popularity vs Track Duration (minutes)',
         labels={'duration_min': 'Duration (minutes)', 'mean_popularity': 'Mean Popularity'},
-        template='plotly'
+        template='plotly',
     )
     fig.update_traces(hovertemplate='Duration: %{x:.2f} min<br>Mean Popularity: %{y:.2f}<br>Count: %{customdata[0]}',
                       customdata=agg[['count']].values)
-    fig.update_traces(opacity=opacity)
+    fig.update_traces(opacity=opacity, line_color='rgb(29, 185, 84)')
     fig.update_layout(plot_bgcolor='rgb(215, 195, 223)')
     return fig
 
