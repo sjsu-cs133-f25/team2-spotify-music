@@ -15,15 +15,17 @@ pio.templates.default = "plotly"
 
 ################### DATA PREPARATION ###################
 # Download the latest dataset from kaggle
-downloaded_path = kagglehub.dataset_download("thedevastator/spotify-tracks-genre-dataset")
+# downloaded_path = kagglehub.dataset_download("thedevastator/spotify-tracks-genre-dataset")
 
 # Load the dataset using dataset_load
-songs = kagglehub.dataset_load(
-  KaggleDatasetAdapter.PANDAS,
-  "thedevastator/spotify-tracks-genre-dataset",
-  "train.csv",
-)
-songs.dropna()
+#songs = kagglehub.dataset_load(
+#  KaggleDatasetAdapter.PANDAS,
+#  "thedevastator/spotify-tracks-genre-dataset",
+#  "train.csv",
+#)
+
+# For local testing, load from local CSV
+songs = pd.read_csv('webapp/data/train.csv')
 
 # outline of audio features and genres
 audio_features = ['danceability', 'energy', 'loudness', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo']
