@@ -13,5 +13,5 @@ Our dataset contains a collection of Spotify tracks of 125 different genres. Thi
 
 ## Running the dashboard webapp
 - Navigate to [webapp/app.py](https://github.com/sjsu-cs133-f25/team2-spotify-music/blob/4e59bf614126bc0187d9db0268f567db2ea68da8/webapp/app.py)
-- Download all missing dependencies  
+- Download all missing dependencies from requirements.txt
 - Run app.py

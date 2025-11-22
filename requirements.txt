@@ -1,0 +1,10 @@
+dash
+plotly
+pandas
+numpy
+kagglehub
+seaborn
+matplotlib
+jupyter
+notebook
+ipykernel
